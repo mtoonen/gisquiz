@@ -16,25 +16,27 @@
  */
 
 
-/**
- * A question for the questionnaire component
- */
-Ext.define("viewer.components.Question", {
-    extend: "Ext.util.Observable",
+
+Ext.define("viewer.components.QuestionMaker", {
+    extend: "viewer.components.Component",
+    questions: null,
     window: null,
-    config: {
-        id: null,
-        question: null,
-        type: null,
-        answer: null
+    constructor: function(conf) {
+        viewer.components.Questionnaire.superclass.constructor.call(this, conf);
+        this.initConfig(conf);
+        var me = this;
+        this.questions = new Array();
+        this.questions.push(Ext.create(viewer.components.Question, {}));
+        this.renderButton({
+            handler: function() {
+                me.buttonClick();
+            },
+            text: "open",
+            tooltip: " me.tooltip"
+        });
+        return this;
     },
-    constructor: function(config) {
-        config = {
-            question: "Wie ben ik?",
-            id: 1,
-            type: "simple"
-        };
-        this.initConfig(config);
+    createForm: function() {
         this.window = Ext.create('Ext.window.Window', {
             title: 'Vraag',
             height: 200,
@@ -74,24 +76,13 @@ Ext.define("viewer.components.Question", {
                 }
             ]
         });
-        return this;
     },
-    show: function() {
+    buttonClick: function() {
         this.window.show();
-    },
-    cancel: function() {
-        var a = 0;
-    },
-    save: function() {
-        var a = 0;
-    },
-    giveAnswer: function(answer, group) {
-        var a = 0;
-    },
-    getUI: function() {
-        return this.window;
     },
     getExtComponents: function() {
         return [this.window];
     }
 });
+
+
