@@ -47,8 +47,24 @@ Ext.define("viewer.components.QuestionMaker", {
                     xtype: "panel",
                     items: [
                         {
-                            xtype: 'label',
-                            text: this.question
+                            xtype: "combo",
+                            label: "Type vraag",
+                            queryMode: 'local',
+                            name: "type",
+                            displayField: 'label',
+                            valueField: 'type',
+                            store: Ext.create('Ext.data.Store', {
+                                fields: ['type', 'label'],
+                                data: [
+                                    {"label": "Multiple choice", "type": "MC"},
+                                    {"label": "Klik om te antwoorden", "type": "CLICK"},
+                                    {"label": "Open vraag", "type": "OPEN"}
+                                ]
+                            })
+                        },
+                        {
+                            xtype: 'text',
+                            emptyText: "Voer de vraag in..."
                         }
                     ]
                 }
@@ -78,6 +94,9 @@ Ext.define("viewer.components.QuestionMaker", {
         });
     },
     buttonClick: function() {
+        if (this.window === null) {
+            this.createForm();
+        }
         this.window.show();
     },
     getExtComponents: function() {
