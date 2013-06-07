@@ -32,23 +32,24 @@ Ext.define("viewer.components.QuestionMaker", {
                 me.buttonClick();
             },
             text: "open",
-            tooltip: " me.tooltip"
+            tooltip: "Question maker"
         });
         return this;
     },
     createForm: function() {
         this.window = Ext.create('Ext.window.Window', {
             title: 'Vraag',
-            height: 200,
+            height: 500,
             width: 400,
             layout: 'fit',
             items: [
                 {
-                    xtype: "panel",
+                    xtype: "form",
+                    id: "questionForm",
                     items: [
                         {
-                            xtype: "combo",
-                            label: "Type vraag",
+                            xtype: "combobox",
+                            fieldLabel: "Type vraag",
                             queryMode: 'local',
                             name: "type",
                             displayField: 'label',
@@ -60,11 +61,68 @@ Ext.define("viewer.components.QuestionMaker", {
                                     {"label": "Klik om te antwoorden", "type": "CLICK"},
                                     {"label": "Open vraag", "type": "OPEN"}
                                 ]
-                            })
+                            }),
+                            listeners: {
+                                change: {
+                                    fn: function(combo, answer) {
+
+                                        var open = Ext.getCmp("openAnswerPanel");
+                                        open.setVisible(answer === "OPEN");
+                                        var multi = Ext.getCmp("multiAnswerPanel");
+                                        multi.setVisible(answer === "MC");
+                                        var click = Ext.getCmp("clickAnswerPanel");
+                                        click.setVisible(answer === "CLICK");
+                                    },
+                                    scope: this
+                                }
+                            }
                         },
                         {
-                            xtype: 'text',
+                            xtype: 'textarea',
+                            fieldLabel: "Vraag",
+                            name: 'questionText',
                             emptyText: "Voer de vraag in..."
+                        },
+                        {
+                            xtype: "panel",
+                            id: "openAnswerPanel",
+                            hidden: true,
+                            items: [
+                                {
+                                    xtype: "textarea",
+                                    id: "openAnswer",
+                                    emptyText: "Vul hier het antwoord in"
+                                }
+                            ]
+                        },
+                        {
+                            xtype: "panel",
+                            id: "multiAnswerPanel",
+                            hidden: true,
+                            items: [
+                                {
+                                    xtype: "texfield",
+                                    id: "multiAnswer",
+                                    emptyText: "Dit is een multipleChoice antwoord"
+                                }
+                            ]
+                        },
+                        {
+                            xtype: "panel",
+                            id: "clickAnswerPanel",
+                            hidden: true,
+                            items: [
+                                {
+                                    xtype: "label",
+                                    id: "clickAnswer",
+                                    text: "Druk op de knop en klik het antworod aan op de kaart"
+                                },
+                                 {
+                                    xtype: "number",
+                                    id: "distance",
+                                    fieldLabel: "Dit is een multipleChoice antwoord"
+                                }
+                            ]
                         }
                     ]
                 }
@@ -72,11 +130,11 @@ Ext.define("viewer.components.QuestionMaker", {
             bbar: [
                 {
                     xtype: 'button',
-                    text: 'Beantwoord',
+                    text: 'Opslaan',
                     listeners: {
                         click: {
                             scope: this,
-                            fn: this.giveAnswer
+                            fn: this.save
                         }
                     }
                 },
@@ -92,6 +150,31 @@ Ext.define("viewer.components.QuestionMaker", {
                 }
             ]
         });
+    },
+    save: function() {
+        Ext.Ajax.request({
+            url: actionBeans["question"],
+            params: {create: true, rpp: numTweets, latestId: latestId},
+            success: function(result) {
+                var response = Ext.JSON.decode(result.responseText);
+
+                if (response.success) {
+                    successFunction(response);
+                } else {
+                    if (failureFunction != undefined) {
+                        failureFunction(response.error);
+                    }
+                }
+            },
+            failure: function(result) {
+                if (failureFunction != undefined) {
+                    failureFunction("Ajax request failed with status " + result.status + " " + result.statusText + ": " + result.responseText);
+                }
+            }
+        });
+    },
+    cancel: function() {
+        this.window.hide();
     },
     buttonClick: function() {
         if (this.window === null) {
